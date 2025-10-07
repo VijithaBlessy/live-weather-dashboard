@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #6dd5fa, #2980b9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 350px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 15px;
+    }
+    input {
+      padding: 8px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      background: #2980b9;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1b6391;
+    }
+    .weather, .forecast {
+      margin-top: 20px;
+    }
+    .forecast-cards {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    .card {
+      background: #f0f8ff;
+      padding: 10px;
+      border-radius: 8px;
+      min-width: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>☁️ Weather Dashboard</h2>
+    <input type="text" id="cityInput" placeholder="Enter city">
+    <button onclick="getWeather()">Search</button>
+    
+    <div class="weather" id="weather"></div>
+    <div class="forecast" id="forecast"></div>
+  </div>
+
+  <script>
+    const apiKey = "f71c252e32e7cd19c721abec7e7ffe71"; // 🔑 Put your OpenWeatherMap API key here
+
+    async function getWeather() {
+      const city = document.getElementById("cityInput").value;
+      if (!city) {
+        alert("Please enter a city");
+        return;
+      }
+
+      const currentUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+      try {
+        // Fetch current weather
+        const currentRes = await fetch(currentUrl);
+        if (!currentRes.ok) throw new Error("City not found");
+        const currentData = await currentRes.json();
+
+        // Display current weather
+        document.getElementById("weather").innerHTML = `
+          <h3>${currentData.name}, ${currentData.sys.country}</h3>
+          <p>🌡️ Temp: ${currentData.main.temp} °C</p>
+          <p>☁️ Condition: ${currentData.weather[0].description}</p>
+          <p>💧 Humidity: ${currentData.main.humidity}%</p>
+          <p>💨 Wind: ${currentData.wind.speed} m/s</p>
+        `;
+
+        // Fetch forecast
+        const forecastRes = await fetch(forecastUrl);
+        const forecastData = await forecastRes.json();
+
+        // Show 5-day forecast (every 8th = 24 hrs)
+        let forecastHTML = "<h3>5-Day Forecast</h3><div class='forecast-cards'>";
+        forecastData.list.filter((_, i) => i % 8 === 0).forEach(day => {
+          const date = new Date(day.dt_txt).toLocaleDateString();
+          forecastHTML += `
+            <div class="card">
+              <p>${date}</p>
+              <p>${day.main.temp} °C</p>
+              <p>${day.weather[0].main}</p>
+            </div>
+          `;
+        });
+        forecastHTML += "</div>";
+        document.getElementById("forecast").innerHTML = forecastHTML;
+
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+  </script>
+</body>
+</html>
